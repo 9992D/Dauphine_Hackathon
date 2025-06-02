@@ -11,3 +11,5 @@ Napoléon veille sur son monde.
 Clavier chargé, regard qui bronze.
 Un geek d’acier, au cœur empire,
 Fier et précis, prêt à s'instruire. 
+
+<3

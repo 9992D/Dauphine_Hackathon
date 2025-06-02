@@ -18,7 +18,7 @@ for i, step in enumerate(tqdm(steps, desc="📊 Pipeline", unit="étape")):
         df_retail = pd.read_csv(path + 'retailer.csv', parse_dates=['timestamp_utc'])
         df_tv = pd.read_csv(path + 'tv_publisher.csv', parse_dates=['timestamp_utc'])
         df_prog = pd.read_csv(path + 'programmatic_publisher.csv', parse_dates=['timestamp_utc'])
-        df_mapping = pd.read_csv(path + 'mapping_transac_to_tv.csv')
+        df_mapping = pd.read_csv(path + 'mapping_transac_tv.csv')
         df_socio = pd.read_csv(path + 'socio_demo.csv')
 
     elif step == "Nettoyage":
