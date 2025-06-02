@@ -1,12 +1,9 @@
 import pandas as pd
 from tqdm import tqdm
-
-# Initialiser tqdm pour Pandas
 tqdm.pandas()
 
 print("🔄 Début du traitement...")
 
-# Étapes avec barre de progression manuelle
 steps = [
     "Chargement des données",
     "Nettoyage",
