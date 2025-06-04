@@ -1,46 +1,52 @@
 import pandas as pd
-from utils import read_table, get_connection
+import numpy as np
+from src.markov_model import compute_conversion_rate
 
-retail = read_table("retail")
-tv = read_table("tv")
-prog = read_table("prog")
-map_df = read_table("mapping")
 
-for df in [retail, tv, prog]:
-    df["timestamp_utc"] = pd.to_datetime(df["timestamp_utc"])
+def compute_removal_effect(transition_matrix, channel):
+    """
+    Calcule le taux de conversion sans l'état 'channel'.
+    Retourne le taux de conversion du modèle modifié.
+    """
+    if channel not in transition_matrix.index:
+        raise KeyError(f"État '{channel}' non trouvé dans la matrice de transition.")
 
-tv = tv.merge(map_df[["customer_id", "device_id"]], on="device_id", how="left")
-prog = prog.merge(map_df[["customer_id", "dsp_id"]], on="dsp_id", how="left")
+    states = list(transition_matrix.index)
+    idx = states.index(channel)
 
-tv_sorted = tv.sort_values('timestamp_utc')
-prog_sorted = prog.sort_values('timestamp_utc')
+    # Retirer ligne et colonne correspondantes
+    new_states = [s for s in states if s != channel]
+    new_vals = np.delete(np.delete(transition_matrix.values, idx, axis=0), idx, axis=1)
+    P_new = pd.DataFrame(new_vals, index=new_states, columns=new_states)
 
-def assign_last_touch(retail_df, tv_df, prog_df):
-    retail_df = retail_df.copy()
-    retail_df['last_channel'] = 'none'
+    # Recalculer taux de conversion avec la nouvelle matrice
+    new_rate = compute_conversion_rate(P_new)
+    return new_rate
 
-    for idx, row in retail_df.iterrows():
-        cid = row['customer_id']
-        purchase_time = row['timestamp_utc']
-        tvs = tv_df[tv_df['customer_id'] == cid]
-        progs = prog_df[prog_df['customer_id'] == cid]
-        merged = pd.concat([
-            tvs.assign(channel='tv'),
-            progs.assign(channel='prog')
-        ])
-        merged = merged[merged['timestamp_utc'] < purchase_time]
-        if merged.empty:
-            retail_df.at[idx, 'last_channel'] = 'none'
-        else:
-            last = merged.sort_values('timestamp_utc').iloc[-1]['channel']
-            retail_df.at[idx, 'last_channel'] = last
 
-    return retail_df
+def compute_all_removal_effects(transition_matrix, base_conv_rate):
+    """
+    Pour chaque canal (état non-absorbant sauf 'Start'), calcule l'effet de suppression.
+    Retourne dict {etat: effet} avec effet = base_conv_rate - taux_sans_etat.
+    """
+    effects = {}
+    states = list(transition_matrix.index)
+    excluded = {'Conversion', 'No_Conversion', 'Start'}
+    for state in states:
+        if state in excluded:
+            continue
+        new_rate = compute_removal_effect(transition_matrix, state)
+        effects[state] = base_conv_rate - new_rate
+    return effects
 
-retail_lt = assign_last_touch(retail, tv_sorted, prog_sorted)
-conn = get_connection()
-retail_lt[['customer_id', 'timestamp_utc', 'last_channel']].to_sql(
-    "retail_attribution", conn, if_exists="replace", index=False
-)
-conn.close()
-print("✅ retail_attribution enregistré dans SQLite")
+
+def compute_channel_attribution(removal_effects, total_conversions):
+    """
+    Calcule les conversions attribuées par canal selon les effets de suppression.
+    Retourne un DataFrame indexé par canal avec colonnes ['removal_effect', 'proportion', 'conversions_attribuees'].
+    """
+    df = pd.DataFrame.from_dict(removal_effects, orient='index', columns=['removal_effect'])
+    total_effect = df['removal_effect'].sum()
+    df['proportion'] = df['removal_effect'] / total_effect
+    df['conversions_attribuees'] = df['proportion'] * total_conversions
+    return df
