@@ -402,6 +402,21 @@ Le pipeline se déroule en plusieurs étapes, tracées dans le log :
 
 ---
 
+### 6.1 Analyse d’impact sans canal spécifique
+
+Le dossier peut contenir des scripts d’analyse manuelle ou complémentaire, en particulier pour simuler l'impact de la suppression d’un canal spécifique en dehors du pipeline principal.
+
+Exemples inclus :
+
+- **`analyse1.py`** : affiche le taux de conversion global avec et sans un canal donné (par exemple, `Prog_Retargeting`) en supprimant dynamiquement la ligne et la colonne correspondantes dans la matrice.
+- **`analyse2.py`** : version alternative plus isolée pour mesurer le taux de conversion simulé en l’absence d’un canal.
+
+Ces scripts se basent directement sur `results/matrices/transition_matrix.csv`.
+
+> 🧠 **Note méthodologique importante** : pour une estimation plus robuste, nous avons exclu les transitions directes de `Start → Conversion`, qui ne reflètent pas de véritable influence marketing traçable. Cela permet d'éviter d’attribuer artificiellement trop de valeur à une “conversion spontanée”.
+
+---
+
 ## 7. Résultats générés
 
 Une fois le pipeline terminé, vous trouverez :
