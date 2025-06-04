@@ -9,7 +9,6 @@ def preprocess_data_in_chunks():
     - Pour chaque ligne, récupère customer_id via le mapping, étiquette state et channel, puis écrit dans merged_data.csv.
     Retourne le chemin du fichier consolidé "merged_data.csv".
     """
-    # 1) Charger le mapping au format dictionnaire
     map_device = {}
     map_dsp = {}
     with open(CSV_ID_MAPPING, newline='') as mapfile:
@@ -23,19 +22,15 @@ def preprocess_data_in_chunks():
             if dsp:
                 map_dsp[dsp] = cust
 
-    # Préparer le fichier de sortie
     processed_dir = CSV_RETAILER.parent / 'processed'
     processed_dir.mkdir(exist_ok=True, parents=True)
     output_path = processed_dir / 'merged_data.csv'
-    # S'assurer que le fichier n'existe pas déjà
     if output_path.exists():
         output_path.unlink()
 
-    # 2) Traitement des expositions TV (un seul passage)
     with open(CSV_EXPOS_TV, newline='') as tvfile, open(output_path, 'a', newline='') as outfile:
         reader = csv.DictReader(tvfile)
         writer = csv.writer(outfile)
-        # Écrire en-tête si nouveau fichier
         writer.writerow(['customer_id', 'timestamp', 'state', 'channel'])
         for row in reader:
             dev = row.get('device_id')
@@ -45,7 +40,6 @@ def preprocess_data_in_chunks():
             timestamp = row.get('timestamp_utc')
             writer.writerow([cust, timestamp, 'TV', 'TV'])
 
-    # 3) Traitement des expositions programmatiques
     with open(CSV_EXPOS_PRG, newline='') as prgfile, open(output_path, 'a', newline='') as outfile:
         reader = csv.DictReader(prgfile)
         writer = csv.writer(outfile)
@@ -59,7 +53,6 @@ def preprocess_data_in_chunks():
             state = f"Prog_{camp}"
             writer.writerow([cust, timestamp, state, 'Programmatique'])
 
-    # 4) Traitement des événements Retailer (conversions)
     with open(CSV_RETAILER, newline='') as retfile, open(output_path, 'a', newline='') as outfile:
         reader = csv.DictReader(retfile)
         writer = csv.writer(outfile)

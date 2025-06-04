@@ -9,7 +9,6 @@ def build_journeys(df_all):
     """
     journeys = defaultdict(list)
 
-    # On suppose que df_all a : 'customer_id', 'timestamp', 'state'
     for customer_id, group in df_all.groupby('customer_id'):
         group_sorted = group.sort_values('timestamp')
         current_path = ['Start']
@@ -21,7 +20,6 @@ def build_journeys(df_all):
                 current_path = ['Start']
             else:
                 current_path.append(state)
-        # Si le dernier parcours n'est pas terminé par Conversion, on le marque No_Conversion
         if len(current_path) > 1 and current_path[-1] != 'Conversion':
             current_path.append('No_Conversion')
             journeys[customer_id].append(current_path)

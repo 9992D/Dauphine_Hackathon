@@ -8,19 +8,16 @@ def compute_transition_matrix(journeys):
     pour la chaîne de Markov.
     Retourne un DataFrame pandas où lignes et colonnes sont les états, et cellules les probabilités.
     """
-    # Récupérer l'ensemble des états observés
     all_states = set()
     for paths in journeys.values():
         for path in paths:
             all_states.update(path)
     all_states = sorted(all_states)
 
-    # Map état → index
     index_map = {state: i for i, state in enumerate(all_states)}
     n = len(all_states)
     counts = np.zeros((n, n), dtype=int)
 
-    # Compter transitions
     for paths in journeys.values():
         for path in paths:
             for i in range(len(path) - 1):
@@ -28,14 +25,13 @@ def compute_transition_matrix(journeys):
                 dst = index_map[path[i + 1]]
                 counts[src, dst] += 1
 
-    # Calculer probabilités
     probs = np.zeros_like(counts, dtype=float)
     for i in range(n):
         s = counts[i].sum()
         if s > 0:
             probs[i] = counts[i] / s
         else:
-            probs[i, i] = 1.0  # état absorbant
+            probs[i, i] = 1.0 
 
     df_matrix = pd.DataFrame(probs, index=all_states, columns=all_states)
     return df_matrix

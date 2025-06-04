@@ -14,12 +14,10 @@ def compute_removal_effect(transition_matrix, channel):
     states = list(transition_matrix.index)
     idx = states.index(channel)
 
-    # Retirer ligne et colonne correspondantes
     new_states = [s for s in states if s != channel]
     new_vals = np.delete(np.delete(transition_matrix.values, idx, axis=0), idx, axis=1)
     P_new = pd.DataFrame(new_vals, index=new_states, columns=new_states)
 
-    # Recalculer taux de conversion avec la nouvelle matrice
     new_rate = compute_conversion_rate(P_new)
     return new_rate
 

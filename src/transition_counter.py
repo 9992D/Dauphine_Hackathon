@@ -24,30 +24,22 @@ def compute_transition_counts_from_file(sorted_csv_path):
             cust = row['customer_id']
             state = row['state']
 
-            # Si nouveau client, terminer parcours précédent
             if cust != prev_customer:
                 if prev_customer is not None and prev_state and prev_state != 'Start' and prev_state != 'Conversion':
-                    # ajouter transition de l'état final au No_Conversion
                     transition_counts[(prev_state, 'No_Conversion')] += 1
-                # Initialiser parcours pour nouveau client
                 prev_customer = cust
                 prev_state = 'Start'
 
-            # Transition de prev_state vers state
             transition_counts[(prev_state, state)] += 1
             states_set.add(prev_state)
             states_set.add(state)
 
-            # Si conversion, on termine parcours et on redémarre au même client
             if state == 'Conversion':
-                # Transition Conversion->Conversion pour état absorbant
                 transition_counts[('Conversion', 'Conversion')] += 1
-                # Préparer nouveau parcours
                 prev_state = 'Start'
             else:
                 prev_state = state
 
-    # À la fin du fichier, vérifier dernier client
     if prev_customer is not None and prev_state and prev_state != 'Start' and prev_state != 'Conversion':
         transition_counts[(prev_state, 'No_Conversion')] += 1
 
@@ -59,12 +51,10 @@ def build_transition_matrix(transition_counts, states_set):
     À partir des counts et de l'ensemble des états, construit une matrice de transition pandas DataFrame.
     """
     import pandas as pd
-    # Trier états pour ordre déterministe
     states = sorted(states_set)
     n = len(states)
     idx_map = {s: i for i, s in enumerate(states)}
 
-    # Initialiser matrice de comptage
     import numpy as np
     counts = np.zeros((n, n), dtype=int)
     for (src, dst), c in transition_counts.items():
@@ -72,14 +62,12 @@ def build_transition_matrix(transition_counts, states_set):
         j = idx_map[dst]
         counts[i, j] = c
 
-    # Construire probas
     probs = np.zeros_like(counts, dtype=float)
     for i in range(n):
         total = counts[i].sum()
         if total > 0:
             probs[i] = counts[i] / total
         else:
-            # état absorbant sans sortie, rester sur lui-même
             probs[i, i] = 1.0
 
     df_matrix = pd.DataFrame(probs, index=states, columns=states)
