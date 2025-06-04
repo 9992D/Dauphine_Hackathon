@@ -1,4 +1,4 @@
-#!/Users/amaurydenny/Desktop/Dauphine_Hackathon/.venv/bin/python3.10
+#!/Users/amaurydenny/Desktop/HackDau/.venv/bin/python3.10
 # -*- coding: utf-8 -*-
 import re
 import sys

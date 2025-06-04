@@ -1,7 +1,8 @@
 import csv
 from collections import defaultdict
 from src.config import CSV_RETAILER
-
+import pandas as pd
+import numpy as np
 
 def compute_transition_counts_from_file(sorted_csv_path):
     """
@@ -17,6 +18,7 @@ def compute_transition_counts_from_file(sorted_csv_path):
     prev_customer = None
     prev_state = None
 
+    filtered_direct_conversions = 0
     # Ouvrir le CSV trié
     with open(sorted_csv_path, newline='') as csvfile:
         reader = csv.DictReader(csvfile)
@@ -30,7 +32,11 @@ def compute_transition_counts_from_file(sorted_csv_path):
                 prev_customer = cust
                 prev_state = 'Start'
 
-            transition_counts[(prev_state, state)] += 1
+            if not (prev_state == 'Start' and state == 'Conversion'):
+                transition_counts[(prev_state, state)] += 1
+            else:
+                filtered_direct_conversions += 1
+
             states_set.add(prev_state)
             states_set.add(state)
 
@@ -43,19 +49,19 @@ def compute_transition_counts_from_file(sorted_csv_path):
     if prev_customer is not None and prev_state and prev_state != 'Start' and prev_state != 'Conversion':
         transition_counts[(prev_state, 'No_Conversion')] += 1
 
-    return transition_counts, states_set
+    import logging
+    logging.info(f"{filtered_direct_conversions} transitions 'Start → Conversion' ont été ignorées.")
 
+    return transition_counts, states_set
 
 def build_transition_matrix(transition_counts, states_set):
     """
     À partir des counts et de l'ensemble des états, construit une matrice de transition pandas DataFrame.
     """
-    import pandas as pd
     states = sorted(states_set)
     n = len(states)
     idx_map = {s: i for i, s in enumerate(states)}
 
-    import numpy as np
     counts = np.zeros((n, n), dtype=int)
     for (src, dst), c in transition_counts.items():
         i = idx_map[src]
