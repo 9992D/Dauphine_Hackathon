@@ -24,7 +24,7 @@ costs_df = pd.DataFrame({
 merged_df = attribution_df.merge(costs_df, on="channel", how="left")
 
 merged_df["cost_per_conversion"] = merged_df["cost_usd"] / merged_df["conversions_attribuees"].abs()
-revenue_per_conversion = 20  # Valeur estimée en $
+revenue_per_conversion = 20  # Prix moyen 55$, cout de revient 20$, frais Amazon 15$ donc revenu estimé de 20$ par conversion
 merged_df["roi"] = ((merged_df["conversions_attribuees"] * revenue_per_conversion) - merged_df["cost_usd"]) / merged_df["cost_usd"]
 
 merged_df.to_csv("results/matrices/roi_by_channel.csv", index=False)
